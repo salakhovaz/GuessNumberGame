@@ -1,0 +1,17 @@
+﻿@model GuessNumberGame.Models.GameSettings
+
+<h2>Игра "Угадай число"</h2>
+<p>@Model.Message</p>
+
+@if (Model.SecretNumber != 0)
+{
+    <form action="/GuessNumberGame/Guess" method="post">
+        <input type="number" name="guess" min="@Model.MinValue" max="@Model.MaxValue" required />
+        <input type="submit" value="Отправить" />
+    </form>
+}
+else
+{
+    <p>Игра окончена.</p>
+    <a href="@Url.Action("Index", "GuessNumberGame" )">Начать заново!</a>
+}
