@@ -1,57 +1,35 @@
-﻿using GuessNumberGame.Models;
-using GuessNumberGame.Models.SecretNumberGenerators.Contracts;
+﻿using GuessNumberGame.Models.GameLogic;
+using GuessNumberGame.Models.GameView;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GuessNumberGame.Controllers
 {
     public class GuessNumberGameController : Controller
     {
-        private static GameSettings _gameSettings = new GameSettings();
-        private readonly ISecretNumberGenerator _secretNumberGenerator;
+        private readonly IGameLogic _gameLogic;
+        private readonly IGameViewModel _viewModel;
 
-        public GuessNumberGameController(ISecretNumberGenerator secretNumberGenerator)
+        public GuessNumberGameController(IGameLogic gameLogic, IGameViewModel viewModel)
         {
-            _secretNumberGenerator = secretNumberGenerator;
+            _gameLogic = gameLogic;
+            _viewModel = viewModel;
         }
 
         public IActionResult Index()
         {
-            if (_gameSettings.SecretNumber == 0)
+            if (!_viewModel.IsGameActive)
             {
-                _gameSettings.SecretNumber = _secretNumberGenerator.Generate(_gameSettings.MinValue, _gameSettings.MaxValue);
-                _gameSettings.Attempts = 0;
-                _gameSettings.Message = "Угадайте число от 1 до 30.";
+                _gameLogic.StartNewGame();
             }
 
-            return View(_gameSettings);
+            return View(_viewModel);
         }
 
         [HttpPost]
         public IActionResult Guess(int guess)
         {
-            _gameSettings.Attempts++;
-
-            if (guess == _gameSettings.SecretNumber)
-            {
-                _gameSettings.Message = $"Вы угадали число {_gameSettings.SecretNumber} за {_gameSettings.Attempts} попыток.";
-                _gameSettings.SecretNumber = 0; 
-            }
-            else if (guess < _gameSettings.SecretNumber)
-            {
-                _gameSettings.Message = "Загаданное число больше.";
-            }
-            else
-            {
-                _gameSettings.Message = "Загаданное число меньше.";
-            }
-
-            if (_gameSettings.Attempts >= _gameSettings.MaxAttempts && guess != _gameSettings.SecretNumber)
-            {
-                _gameSettings.Message = $"Вы исчерпали все попытки. Загаданное число было {_gameSettings.SecretNumber}.";
-                _gameSettings.SecretNumber = 0;
-            }
-
-            return View("Index", _gameSettings);
+            _gameLogic.MakeGuess(guess);
+            return View("Index", _viewModel);
         }
     }
 }
